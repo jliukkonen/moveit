@@ -8,6 +8,8 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 endif()
 
 find_package(Boost REQUIRED system filesystem date_time program_options thread)
+find_package(Eigen3 REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
   moveit_core
   moveit_ros_planning
@@ -18,6 +20,13 @@ find_package(catkin REQUIRED COMPONENTS
   tf2
   tf2_geometry_msgs
   tf2_ros
+  eigen_conversions
+  descartes_core
+  descartes_moveit
+  descartes_trajectory
+  descartes_planner
+  rosparam_shortcuts
+  moveit_visual_tools
 )
 
 catkin_package(
@@ -54,6 +63,7 @@ add_library(moveit_move_group_default_capabilities
   src/default_capabilities/kinematics_service_capability.cpp
   src/default_capabilities/state_validation_service_capability.cpp
   src/default_capabilities/cartesian_path_service_capability.cpp
+  src/default_capabilities/descartes_path_service_capability.cpp
   src/default_capabilities/get_planning_scene_service_capability.cpp
   src/default_capabilities/apply_planning_scene_service_capability.cpp
   src/default_capabilities/clear_octomap_service_capability.cpp

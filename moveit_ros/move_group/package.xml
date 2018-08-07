@@ -26,6 +26,12 @@
   <depend>tf2_ros</depend>
   <depend version_gte="1.11.2">pluginlib</depend>
   <depend>std_srvs</depend>
+  <depend>descartes_core</depend>
+  <depend>descartes_moveit</depend>
+  <depend>descartes_trajectory</depend>
+  <depend>descartes_planner</depend>
+  <depend>eigen_conversions</depend>
+  <depend>moveit_visual_tools</depend>
 
   <exec_depend>moveit_kinematics</exec_depend>
 

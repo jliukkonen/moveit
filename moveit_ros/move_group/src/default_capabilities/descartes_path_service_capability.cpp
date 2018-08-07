@@ -62,45 +62,53 @@ void move_group::MoveGroupDescartesPathService::initialize()
   std::size_t error = 0;
 
   // Params loaded from server
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/robot_description", robot_description_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/world_frame", world_frame_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/group_name", group_name_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/tcp_frame", tool_center_point_frame_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/positional_tolerance", positional_tolerance_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/positional_tolerance_inc",
-                                    positional_tolerance_increment_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/roll_orientation_tolerance",
-                                    roll_orientation_tolerance_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/pitch_orientation_tolerance",
-                                    pitch_orientation_tolerance_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/yaw_orientation_tolerance",
-                                    yaw_orientation_tolerance_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/orientation_tolerance_inc",
-                                    orientation_tolerance_increment_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/use_collision_checking", use_collision_checking_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/uses_ikfast", uses_ikfast_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/debug/verbose", verbose_debug_);
-  error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/debug/visual", visual_debug_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/robot_description", robot_description_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/world_frame", world_frame_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/group_name", group_name_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/tcp_frame", tool_center_point_frame_);
 
-  rosparam_shortcuts::shutdownIfError(node_name, error);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/positional_tolerance", positional_tolerance_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/positional_tolerance_inc", positional_tolerance_increment_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/roll_orientation_tolerance", roll_orientation_tolerance_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/pitch_orientation_tolerance", pitch_orientation_tolerance_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/yaw_orientation_tolerance", yaw_orientation_tolerance_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/orientation_tolerance_inc", orientation_tolerance_increment_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/use_collision_checking", use_collision_checking_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/uses_ikfast", uses_ikfast_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/debug/verbose", verbose_debug_);
+  // error += !rosparam_shortcuts::get(node_name, nh_, "descartes_params/debug/visual", visual_debug_);
+  // rosparam_shortcuts::shutdownIfError(node_name, error);
 
-  context_->planning_scene_monitor_->updateFrameTransforms();
+  // NOTE: Overwrite these defaults by adding values to the param server.
+  nh_.param<std::string>("descartes_params/robot_description", robot_description_, "/robot_description");
+  nh_.param<double>("descartes_params/positional_tolerance", positional_tolerance_, 0.0);
+  nh_.param<double>("descartes_params/positional_tolerance_inc", positional_tolerance_increment_, 0.0);
+  nh_.param<double>("descartes_params/roll_orientation_tolerance", roll_orientation_tolerance_, 0.0);
+  nh_.param<double>("descartes_params/pitch_orientation_tolerance", pitch_orientation_tolerance_, 0.0);
+  nh_.param<double>("descartes_params/yaw_orientation_tolerance", yaw_orientation_tolerance_, 0.0);
+  nh_.param<double>("descartes_params/orientation_tolerance_inc", orientation_tolerance_increment_, 0.0);
+  // NOTE: This parameter will become obsolete after
+  nh_.param<bool>("descartes_params/uses_ikfast", uses_ikfast_, false);
+  nh_.param<bool>("descartes_params/debug/verbose", verbose_debug_, false);
+  nh_.param<bool>("descartes_params/debug/visual", visual_debug_, false);
 
-  // Setup Descartes parameters
-  if (uses_ikfast_)
-    descartes_model_.reset(new descartes_moveit::IkFastMoveitStateAdapter);
-  else
-    descartes_model_.reset(new descartes_moveit::MoveitStateAdapter);
+  // context_->planning_scene_monitor_->updateFrameTransforms();
 
-  bool model_init = descartes_model_->initialize(robot_description_, group_name_, world_frame_,
-                                                 tool_center_point_frame_, context_->planning_scene_monitor_);
-  if (!model_init)
-  {
-    ROS_ERROR_STREAM_NAMED(name_, "Could not initialize robot model.");
-    return;
-  }
+  // // Setup Descartes parameters
+  // if (uses_ikfast_)
+  //   descartes_model_.reset(new descartes_moveit::IkFastMoveitStateAdapter);
+  // else
+  //   descartes_model_.reset(new descartes_moveit::MoveitStateAdapter);
 
-  descartes_model_->setCheckCollisions(use_collision_checking_);
+  // bool model_init = descartes_model_->initialize(robot_description_, group_name_, world_frame_,
+  //                                                tool_center_point_frame_, context_->planning_scene_monitor_);
+  // if (!model_init)
+  // {
+  //   ROS_ERROR_STREAM_NAMED(name_, "Could not initialize robot model.");
+  //   return;
+  // }
+
+  // descartes_model_->setCheckCollisions(use_collision_checking_);
 
   // For visualizing the path request
   if (visual_debug_)
@@ -287,7 +295,30 @@ bool move_group::MoveGroupDescartesPathService::computeService(moveit_msgs::GetC
                                                                moveit_msgs::GetCartesianPath::Response& res)
 {
   ROS_INFO_NAMED(name_, "Received request to compute Descartes path");
+
   // Get most up to date planning scene information
+  context_->planning_scene_monitor_->updateFrameTransforms();
+
+  // Setup Descartes parameters
+  if (uses_ikfast_)
+    descartes_model_.reset(new descartes_moveit::IkFastMoveitStateAdapter);
+  else
+    descartes_model_.reset(new descartes_moveit::MoveitStateAdapter);
+
+  const std::string& default_frame = context_->planning_scene_monitor_->getRobotModel()->getModelFrame();
+
+  // TODO: check if this results in double transform.
+  std::string world_frame = (req.header.frame_id.empty() ? default_frame : req.header.frame_id);
+  bool model_init = descartes_model_->initialize(robot_description_, req.group_name, world_frame,
+                                                 req.link_name, context_->planning_scene_monitor_);
+  if (!model_init)
+  {
+    ROS_ERROR_STREAM_NAMED(name_, "Could not initialize robot model.");
+    return false;
+  }
+
+  descartes_model_->setCheckCollisions(true);
+
   context_->planning_scene_monitor_->updateFrameTransforms();
 
   // Setup Descartes parameters
@@ -335,12 +366,10 @@ bool move_group::MoveGroupDescartesPathService::computeService(moveit_msgs::GetC
 
     std::string sep = "\n-----------------------------------------------------\n";
     ROS_DEBUG_STREAM_NAMED(name_, "current_pose\n"
-                                      << "Position: \n"
-                                      << current_pose.translation() << "\nRotation: \n"
-                                      << current_pose.rotation() << sep);
+                                  << "Position: \n"
+                                  << current_pose.translation() << "\nRotation: \n"
+                                  << current_pose.rotation() << sep);
   }
-
-  const std::string& default_frame = context_->planning_scene_monitor_->getRobotModel()->getModelFrame();
 
   bool no_transform =
       req.header.frame_id.empty() || robot_state::Transforms::sameFrame(req.header.frame_id, default_frame);

@@ -1,17 +1,17 @@
 <library path="libmoveit_move_group_default_capabilities">
 
-  <class name="move_group/MoveGroupCartesianPathService" type="move_group::MoveGroupCartesianPathService" base_class_type="move_group::MoveGroupCapability">
-    <description>
-      Computing straight line Cartesian paths with collision checking via a ROS service
-    </description>
-  </class>
-
+  <!-- <class name="move_group/MoveGroupCartesianPathService" type="move_group::MoveGroupCartesianPathService" base_class_type="move_group::MoveGroupCapability"> -->
+    <!-- <description> -->
+      <!-- Computing straight line Cartesian paths with collision checking via a ROS service -->
+    <!-- </description> -->
+  <!-- </class> -->
+<!--  -->
   <!-- To use the new Descartes path service, comment out the above capability and uncomment the one below -->
-  <!-- <class name="move_group/MoveGroupCartesianPathService" type="move_group::MoveGroupDescartesPathService" base_class_type="move_group::MoveGroupCapability">
+  <class name="move_group/MoveGroupCartesianPathService" type="move_group::MoveGroupDescartesPathService" base_class_type="move_group::MoveGroupCapability">
     <description>
       Computing straight line Cartesian paths using Descartes under the hood via a ROS service
     </description>
-  </class> -->
+  </class>
 
   <class name="move_group/MoveGroupExecuteService" type="move_group::MoveGroupExecuteService" base_class_type="move_group::MoveGroupCapability">
     <description>

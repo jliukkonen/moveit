@@ -52,7 +52,7 @@
 #include <descartes_trajectory/cart_trajectory_pt.h>
 
 // rosparam
-#include <rosparam_shortcuts/rosparam_shortcuts.h>
+// #include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 // Eigen
 #include <eigen_conversions/eigen_msg.h>
@@ -106,16 +106,16 @@ private:
 
   // Params loaded from server
   std::string robot_description_;
-  std::string world_frame_;
-  std::string group_name_;
-  std::string tool_center_point_frame_;
+  // std::string world_frame_;
+  // std::string group_name_;
+  // std::string tool_center_point_frame_;
   double positional_tolerance_;
   double positional_tolerance_increment_;
   double roll_orientation_tolerance_;
   double pitch_orientation_tolerance_;
   double yaw_orientation_tolerance_;
   double orientation_tolerance_increment_;
-  bool use_collision_checking_;
+  // bool use_collision_checking_;
   bool uses_ikfast_;
   bool verbose_debug_;
   bool visual_debug_;
