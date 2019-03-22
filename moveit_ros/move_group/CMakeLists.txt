@@ -25,7 +25,6 @@ find_package(catkin REQUIRED COMPONENTS
   descartes_moveit
   descartes_trajectory
   descartes_planner
-  rosparam_shortcuts
   moveit_visual_tools
 )
 
