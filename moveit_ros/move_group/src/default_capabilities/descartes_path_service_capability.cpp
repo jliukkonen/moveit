@@ -49,7 +49,12 @@
 #include <moveit_msgs/DisplayTrajectory.h>
 
 move_group::MoveGroupDescartesPathService::MoveGroupDescartesPathService()
-  : MoveGroupCapability("DescartesPathService"), display_computed_paths_(true), nh_("~")
+  : MoveGroupCapability("DescartesPathService")
+  , display_computed_paths_(true)
+  , nh_("~")
+  , current_group_name_("")
+  , current_world_frame_("")
+  , current_tcp_frame_("")
 {
   visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("world", "/moveit_visual_markers"));
 }
@@ -76,33 +81,6 @@ void move_group::MoveGroupDescartesPathService::initialize()
 
   context_->planning_scene_monitor_->updateFrameTransforms();
 
-  // Setup Descartes parameters
-  bool model_init = false;
-  if (uses_ikfast_)
-  {
-    std::shared_ptr<descartes_moveit::IkFastMoveitStateAdapter> moveit_state_adpater;
-    model_init = moveit_state_adpater->initialize(robot_description_, group_name_, world_frame_,
-                                                  tool_center_point_frame_);
-    moveit_state_adpater->setPlanningSceneMonitor(context_->planning_scene_monitor_);
-    descartes_model_.reset(moveit_state_adpater);
-  }
-  else
-  {
-    std::shared_ptr<descartes_moveit::MoveitStateAdapter> moveit_state_adpater;
-    model_init = moveit_state_adpater->initialize(robot_description_, group_name_, world_frame_,
-                                                  tool_center_point_frame_);
-    moveit_state_adpater->setPlanningSceneMonitor(context_->planning_scene_monitor_);
-    descartes_model_.reset(moveit_state_adpater);
-  }
-
-  if (!model_init)
-  {
-    ROS_ERROR_STREAM_NAMED(name_, "Could not initialize robot model.");
-    return;
-  }
-
-  descartes_model_->setCheckCollisions(true);
-
   // For visualizing the path request
   if (visual_debug_)
   {
@@ -121,9 +99,9 @@ void move_group::MoveGroupDescartesPathService::initialize()
                                                                &MoveGroupDescartesPathService::computeService, this);
 }
 
-void move_group::MoveGroupDescartesPathService::createDensePath(const Eigen::Affine3d& start,
-                                                                const Eigen::Affine3d& end, double max_step,
-                                                                EigenSTL::vector_Affine3d& dense_waypoints)
+void move_group::MoveGroupDescartesPathService::createDensePath(const Eigen::Isometry3d& start,
+                                                                const Eigen::Isometry3d& end, double max_step,
+                                                                EigenSTL::vector_Isometry3d& dense_waypoints)
 {
   // TODO: There's a lot of casting being done. This could probably be pruned down
   const Eigen::Quaterniond start_quaternion(start.rotation());
@@ -143,7 +121,7 @@ void move_group::MoveGroupDescartesPathService::createDensePath(const Eigen::Aff
     if (t > 1.0)
       t = 1.0;  // Ensure last step is at exactly 1.0
 
-    Eigen::Affine3d eigen_pose;
+    Eigen::Isometry3d eigen_pose;
     eigen_pose.translation() = (end_translation - start_translation) * t + start_translation;
     eigen_pose.linear() = start_quaternion.slerp(t, end_quaternion).toRotationMatrix();
 
@@ -152,12 +130,12 @@ void move_group::MoveGroupDescartesPathService::createDensePath(const Eigen::Aff
 }
 
 void move_group::MoveGroupDescartesPathService::createDescartesTrajectory(
-    const EigenSTL::vector_Affine3d& dense_waypoints,
+    const EigenSTL::vector_Isometry3d& dense_waypoints,
     std::vector<descartes_core::TrajectoryPtPtr>& input_descartes_trajectory)
 {
   for (std::size_t i = 0; i < dense_waypoints.size(); ++i)
   {
-    const Eigen::Affine3d eigen_pose = dense_waypoints[i];
+    const Eigen::Isometry3d eigen_pose = dense_waypoints[i];
     const Eigen::Quaterniond rotation(eigen_pose.rotation());
 
     if (verbose_debug_)
@@ -214,7 +192,7 @@ double move_group::MoveGroupDescartesPathService::computeMaxJointDelta(const std
 
 bool move_group::MoveGroupDescartesPathService::transformWaypointsToFrame(
     const moveit_msgs::GetCartesianPath::Request& req, const std::string& target_frame,
-    EigenSTL::vector_Affine3d& waypoints)
+    EigenSTL::vector_Isometry3d& waypoints)
 {
   for (std::size_t i = 0; i < req.waypoints.size(); ++i)
   {
@@ -284,6 +262,44 @@ double move_group::MoveGroupDescartesPathService::copyDescartesResultToRobotTraj
   return fraction;
 }
 
+bool move_group::MoveGroupDescartesPathService::initializeDescartesModel(const std::string& group_name, const std::string& world_frame, const std::string& tcp_frame)
+{
+  // Setup Descartes parameters
+  bool model_init = false;
+  // ;
+  if (uses_ikfast_)
+  {
+    descartes_model_.reset(new descartes_moveit::IkFastMoveitStateAdapter);
+    descartes_moveit::IkFastMoveitStateAdapter* moveit_state_adapter = dynamic_cast<descartes_moveit::IkFastMoveitStateAdapter*>(descartes_model_.get());
+    model_init = moveit_state_adapter->initialize(robot_description_, group_name, world_frame,
+                                                  tcp_frame);
+    moveit_state_adapter->setPlanningSceneMonitor(context_->planning_scene_monitor_);
+  }
+  else
+  {
+    descartes_model_.reset(new descartes_moveit::MoveitStateAdapter);
+    descartes_moveit::MoveitStateAdapter* moveit_state_adapter = dynamic_cast<descartes_moveit::MoveitStateAdapter*>(descartes_model_.get());
+    model_init = moveit_state_adapter->initialize(robot_description_, group_name, world_frame,
+                                                  tcp_frame);
+    moveit_state_adapter->setPlanningSceneMonitor(context_->planning_scene_monitor_);
+  }
+
+  if (!model_init)
+  {
+    ROS_ERROR_STREAM_NAMED(name_, "Could not initialize robot model.");
+    return false;
+  }
+
+  descartes_model_->setCheckCollisions(true);
+
+  // If all went well, update our local copies of the parameters used to intiialize our descartes_model
+  current_group_name_ = group_name;
+  current_world_frame_ = world_frame;
+  current_tcp_frame_ = tcp_frame;
+
+  return true;
+}
+
 bool move_group::MoveGroupDescartesPathService::computeService(moveit_msgs::GetCartesianPath::Request& req,
                                                                moveit_msgs::GetCartesianPath::Response& res)
 {
@@ -292,18 +308,16 @@ bool move_group::MoveGroupDescartesPathService::computeService(moveit_msgs::GetC
   // Get most up to date planning scene information
   context_->planning_scene_monitor_->updateFrameTransforms();
 
-  // Setup Descartes parameters
-  // if (uses_ikfast_)
-  //   descartes_model_.reset(new descartes_moveit::IkFastMoveitStateAdapter);
-  // else
-  //   descartes_model_.reset(new descartes_moveit::MoveitStateAdapter);
-
   const std::string& default_frame = context_->planning_scene_monitor_->getRobotModel()->getModelFrame();
 
   // TODO: check if this results in double transform.
   std::string world_frame = (req.header.frame_id.empty() ? default_frame : req.header.frame_id);
-  descartes_model_->setToolFrame(req.link_name);
-  descartes_model_->setWorldFrame(world_frame);
+  if (current_group_name_ != req.group_name ||
+      current_world_frame_ != world_frame ||
+      current_tcp_frame_ != req.link_name){
+    if (!initializeDescartesModel(req.group_name, world_frame, req.link_name))
+      return false;
+  }
 
   // Setup Descartes parameters
   descartes_planner::DensePlanner descartes_planner;
@@ -327,7 +341,7 @@ bool move_group::MoveGroupDescartesPathService::computeService(moveit_msgs::GetC
     start_state.copyJointGroupPositions(req.group_name, current_joints);
   }  // Planning scene lock released
 
-  Eigen::Affine3d current_pose;
+  Eigen::Isometry3d current_pose;
   descartes_model_->getFK(current_joints, current_pose);
 
   if (req.waypoints.size() < 1)
@@ -358,7 +372,7 @@ bool move_group::MoveGroupDescartesPathService::computeService(moveit_msgs::GetC
   bool no_transform =
       req.header.frame_id.empty() || robot_state::Transforms::sameFrame(req.header.frame_id, default_frame);
 
-  EigenSTL::vector_Affine3d waypoints(req.waypoints.size() + 1);
+  EigenSTL::vector_Isometry3d waypoints(req.waypoints.size() + 1);
   waypoints[0] = current_pose;
   if (no_transform)
   {
@@ -391,7 +405,7 @@ bool move_group::MoveGroupDescartesPathService::computeService(moveit_msgs::GetC
                  global_frame ? "global" : "link");
 
   // For each set of sequential waypoints we need to ensure that we do not exceed the req.max_step so we resample
-  EigenSTL::vector_Affine3d dense_waypoints;
+  EigenSTL::vector_Isometry3d dense_waypoints;
   // Add the first point then add all the interpolated dense values
   dense_waypoints.push_back(waypoints[0]);
   for (std::size_t i = 1; i < waypoints.size(); ++i)

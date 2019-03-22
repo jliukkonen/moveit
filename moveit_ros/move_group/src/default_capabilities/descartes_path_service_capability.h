@@ -74,20 +74,23 @@ public:
 private:
   bool computeService(moveit_msgs::GetCartesianPath::Request& req, moveit_msgs::GetCartesianPath::Response& res);
 
+  /** \brief Initializes descartes_model_ with new parameters **/
+  bool initializeDescartesModel(const std::string& group_name, const std::string& world_frame, const std::string& link_name);
+
   /** \brief Computes the maximum joint delta between two states. Returns -1.0 if vector size mismatch **/
   double computeMaxJointDelta(const std::vector<double>& joints1, const std::vector<double>& joints2);
 
   /** \brief Interpolates between start and end poses and appends them to deense_waypoints **/
-  void createDensePath(const Eigen::Affine3d& start, const Eigen::Affine3d& end, double max_step,
-                       EigenSTL::vector_Affine3d& dense_waypoints);
+  void createDensePath(const Eigen::Isometry3d& start, const Eigen::Isometry3d& end, double max_step,
+                       EigenSTL::vector_Isometry3d& dense_waypoints);
 
   /** \brief Transforms each point in a vector of affine**/
-  void createDescartesTrajectory(const EigenSTL::vector_Affine3d& dense_waypoints,
+  void createDescartesTrajectory(const EigenSTL::vector_Isometry3d& dense_waypoints,
                                  std::vector<descartes_core::TrajectoryPtPtr>& input_descartes_trajectory);
 
   /** \brief Transforms each waypoint in the request to the target frame **/
   bool transformWaypointsToFrame(const moveit_msgs::GetCartesianPath::Request& req, const std::string& target_frame,
-                                 EigenSTL::vector_Affine3d& waypoints);
+                                 EigenSTL::vector_Isometry3d& waypoints);
 
   /** \brief Takes in a trajectory computed by Descartes and populates the robot_trajectory**/
   double copyDescartesResultToRobotTrajectory(const std::vector<descartes_core::TrajectoryPtPtr>& descartes_result,
@@ -120,6 +123,11 @@ private:
 
   ros::ServiceServer descartes_path_service_;
   bool display_computed_paths_;
+
+  // Cached values for checking if we need to re-initialize our descartes_model
+  std::string current_group_name_;
+  std::string current_world_frame_;
+  std::string current_tcp_frame_;
 
   // For Rviz visualizations
   moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
