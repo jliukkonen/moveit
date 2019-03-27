@@ -273,15 +273,12 @@ bool move_group::MoveGroupDescartesPathService::initializeDescartesModel(const s
     descartes_moveit::IkFastMoveitStateAdapter* moveit_state_adapter = dynamic_cast<descartes_moveit::IkFastMoveitStateAdapter*>(descartes_model_.get());
     model_init = moveit_state_adapter->initialize(robot_description_, group_name, world_frame,
                                                   tcp_frame);
-    moveit_state_adapter->setPlanningSceneMonitor(context_->planning_scene_monitor_);
   }
   else
   {
     descartes_model_.reset(new descartes_moveit::MoveitStateAdapter);
     descartes_moveit::MoveitStateAdapter* moveit_state_adapter = dynamic_cast<descartes_moveit::MoveitStateAdapter*>(descartes_model_.get());
-    model_init = moveit_state_adapter->initialize(robot_description_, group_name, world_frame,
-                                                  tcp_frame);
-    moveit_state_adapter->setPlanningSceneMonitor(context_->planning_scene_monitor_);
+    model_init = moveit_state_adapter->initialize(context_->planning_scene_monitor_, group_name, world_frame, tcp_frame);
   }
 
   if (!model_init)
