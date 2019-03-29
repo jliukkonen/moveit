@@ -74,8 +74,7 @@ void move_group::MoveGroupDescartesPathService::initialize()
   nh_.param<double>("descartes_params/pitch_orientation_tolerance", pitch_orientation_tolerance_, 0.0);
   nh_.param<double>("descartes_params/yaw_orientation_tolerance", yaw_orientation_tolerance_, 0.0);
   nh_.param<double>("descartes_params/orientation_tolerance_inc", orientation_tolerance_increment_, 0.0);
-  // NOTE: This parameter will become obsolete after
-  nh_.param<bool>("descartes_params/uses_ikfast", uses_ikfast_, false);
+
   nh_.param<bool>("descartes_params/debug/verbose", verbose_debug_, false);
   nh_.param<bool>("descartes_params/debug/visual", visual_debug_, false);
 
@@ -264,22 +263,10 @@ double move_group::MoveGroupDescartesPathService::copyDescartesResultToRobotTraj
 
 bool move_group::MoveGroupDescartesPathService::initializeDescartesModel(const std::string& group_name, const std::string& world_frame, const std::string& tcp_frame)
 {
-  // Setup Descartes parameters
-  bool model_init = false;
-  // ;
-  if (uses_ikfast_)
-  {
-    descartes_model_.reset(new descartes_moveit::IkFastMoveitStateAdapter);
-    descartes_moveit::IkFastMoveitStateAdapter* moveit_state_adapter = dynamic_cast<descartes_moveit::IkFastMoveitStateAdapter*>(descartes_model_.get());
-    model_init = moveit_state_adapter->initialize(robot_description_, group_name, world_frame,
-                                                  tcp_frame);
-  }
-  else
-  {
-    descartes_model_.reset(new descartes_moveit::MoveitStateAdapter);
-    descartes_moveit::MoveitStateAdapter* moveit_state_adapter = dynamic_cast<descartes_moveit::MoveitStateAdapter*>(descartes_model_.get());
-    model_init = moveit_state_adapter->initialize(context_->planning_scene_monitor_, group_name, world_frame, tcp_frame);
-  }
+  // Setup Descartes model
+  descartes_model_.reset(new descartes_moveit::MoveitStateAdapter);
+  descartes_moveit::MoveitStateAdapter* moveit_state_adapter = dynamic_cast<descartes_moveit::MoveitStateAdapter*>(descartes_model_.get());
+  bool model_init = moveit_state_adapter->initialize(context_->planning_scene_monitor_, group_name, world_frame, tcp_frame);
 
   if (!model_init)
   {

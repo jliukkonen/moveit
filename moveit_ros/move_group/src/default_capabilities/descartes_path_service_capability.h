@@ -117,7 +117,6 @@ private:
   double yaw_orientation_tolerance_;
   double orientation_tolerance_increment_;
 
-  bool uses_ikfast_;
   bool verbose_debug_;
   bool visual_debug_;
 
