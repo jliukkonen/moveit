@@ -261,12 +261,16 @@ double move_group::MoveGroupDescartesPathService::copyDescartesResultToRobotTraj
   return fraction;
 }
 
-bool move_group::MoveGroupDescartesPathService::initializeDescartesModel(const std::string& group_name, const std::string& world_frame, const std::string& tcp_frame)
+bool move_group::MoveGroupDescartesPathService::initializeDescartesModel(const std::string& group_name,
+                                                                         const std::string& world_frame,
+                                                                         const std::string& tcp_frame)
 {
   // Setup Descartes model
   descartes_model_.reset(new descartes_moveit::MoveitStateAdapter);
-  descartes_moveit::MoveitStateAdapter* moveit_state_adapter = dynamic_cast<descartes_moveit::MoveitStateAdapter*>(descartes_model_.get());
-  bool model_init = moveit_state_adapter->initialize(context_->planning_scene_monitor_, group_name, world_frame, tcp_frame);
+  descartes_moveit::MoveitStateAdapter* moveit_state_adapter =
+      dynamic_cast<descartes_moveit::MoveitStateAdapter*>(descartes_model_.get());
+  bool model_init =
+      moveit_state_adapter->initialize(context_->planning_scene_monitor_, group_name, world_frame, tcp_frame);
 
   if (!model_init)
   {
@@ -296,9 +300,9 @@ bool move_group::MoveGroupDescartesPathService::computeService(moveit_msgs::GetC
 
   // TODO: check if this results in double transform.
   std::string world_frame = (req.header.frame_id.empty() ? default_frame : req.header.frame_id);
-  if (current_group_name_ != req.group_name ||
-      current_world_frame_ != world_frame ||
-      current_tcp_frame_ != req.link_name){
+  if (current_group_name_ != req.group_name || current_world_frame_ != world_frame ||
+      current_tcp_frame_ != req.link_name)
+  {
     if (!initializeDescartesModel(req.group_name, world_frame, req.link_name))
       return false;
   }
@@ -348,9 +352,9 @@ bool move_group::MoveGroupDescartesPathService::computeService(moveit_msgs::GetC
 
     std::string sep = "\n-----------------------------------------------------\n";
     ROS_DEBUG_STREAM_NAMED(name_, "current_pose\n"
-                                  << "Position: \n"
-                                  << current_pose.translation() << "\nRotation: \n"
-                                  << current_pose.rotation() << sep);
+                                      << "Position: \n"
+                                      << current_pose.translation() << "\nRotation: \n"
+                                      << current_pose.rotation() << sep);
   }
 
   bool no_transform =

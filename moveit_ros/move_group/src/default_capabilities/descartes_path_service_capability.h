@@ -75,7 +75,8 @@ private:
   bool computeService(moveit_msgs::GetCartesianPath::Request& req, moveit_msgs::GetCartesianPath::Response& res);
 
   /** \brief Initializes descartes_model_ with new parameters **/
-  bool initializeDescartesModel(const std::string& group_name, const std::string& world_frame, const std::string& link_name);
+  bool initializeDescartesModel(const std::string& group_name, const std::string& world_frame,
+                                const std::string& link_name);
 
   /** \brief Computes the maximum joint delta between two states. Returns -1.0 if vector size mismatch **/
   double computeMaxJointDelta(const std::vector<double>& joints1, const std::vector<double>& joints2);
