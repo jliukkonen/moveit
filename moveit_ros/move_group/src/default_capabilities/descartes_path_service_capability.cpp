@@ -56,7 +56,7 @@ move_group::MoveGroupDescartesPathService::MoveGroupDescartesPathService()
   , current_world_frame_("")
   , current_tcp_frame_("")
 {
-  visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("world", "/moveit_visual_markers"));
+  visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools("world", "/rviz_visual_tools"));
 }
 
 void move_group::MoveGroupDescartesPathService::initialize()
