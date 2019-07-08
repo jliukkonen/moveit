@@ -231,7 +231,7 @@ double CartesianInterpolator::checkRelativeJointSpaceJump(const JointModelGroup*
 {
   if (traj.size() < MIN_STEPS_FOR_JUMP_THRESH)
   {
-    ROS_WARN_NAMED(LOGNAME, "The computed trajectory is too short to detect jumps in joint-space "
+    ROS_INFO_NAMED(LOGNAME, "The computed trajectory is too short to detect jumps in joint-space "
                             "Need at least %zu steps, only got %zu. Try a lower max_step.",
                    MIN_STEPS_FOR_JUMP_THRESH, traj.size());
   }
