@@ -988,8 +988,6 @@ protected:
 
 private:
   std::map<std::string, std::vector<double> > remembered_joint_values_;
-  class MoveItCppImpl;
-  MoveItCppImpl* impl_;
 
   bool status() const;
 
@@ -1007,36 +1005,14 @@ private:
   robot_state::RobotStatePtr getStartState();
   bool hasPoseTarget(const std::string& end_effector_link) const;
   void clearContents();
+  static bool isStateValid(const planning_scene::PlanningScene* planning_scene,
+                  const kinematic_constraints::KinematicConstraintSet* constraint_set, robot_state::RobotState* state,
+                  const robot_state::JointModelGroup* group, const double* ik_solution);
+  bool performTransform(geometry_msgs::PoseStamped& pose_msg, const std::string& target_frame) const;
   // void initializeConstraintsStorage(const std::string& host, unsigned int port);
-
-  // context contents
-  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
-  trajectory_execution_manager::TrajectoryExecutionManagerPtr trajectory_execution_manager_;
-  planning_pipeline::PlanningPipelinePtr planning_pipeline_;
-  plan_execution::PlanExecutionPtr plan_execution_;
-  plan_execution::PlanWithSensingPtr plan_with_sensing_;
-  bool allow_trajectory_execution_;
-  bool debug_;
 
   // impl contents
   void initializeConstraintsStorageThread(const std::string& host, unsigned int port);
-  /*{
-    // Set up db
-    try
-    {
-      warehouse_ros::DatabaseConnection::Ptr conn = moveit_warehouse::loadDatabase();
-      conn->setParams(host, port);
-      if (conn->connect())
-      {
-        constraints_storage_.reset(new moveit_warehouse::ConstraintsStorage(conn));
-      }
-    }
-    catch (std::exception& ex)
-    {
-      ROS_ERROR_NAMED("move_group_interface", "%s", ex.what());
-    }
-    initializing_constraints_ = false;
-  } */
 
   //  Options
   std::string group_name_;
@@ -1063,6 +1039,7 @@ private:
   double goal_orientation_tolerance_;
   bool can_look_;
   bool can_replan_;
+  bool display_computed_paths_;
   double replan_delay_;
 
   // joint state goal
@@ -1087,11 +1064,22 @@ private:
   ros::ServiceClient query_service_;
   ros::ServiceClient get_params_service_;
   ros::ServiceClient set_params_service_;
-  ros::ServiceClient cartesian_path_service_;
   ros::ServiceClient plan_grasps_service_;
   std::unique_ptr<moveit_warehouse::ConstraintsStorage> constraints_storage_;
   std::unique_ptr<boost::thread> constraints_init_thread_;
   bool initializing_constraints_;
+
+  // context contents
+  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
+  trajectory_execution_manager::TrajectoryExecutionManagerPtr trajectory_execution_manager_;
+  planning_pipeline::PlanningPipelinePtr planning_pipeline_;
+  plan_execution::PlanExecutionPtr plan_execution_;
+  plan_execution::PlanWithSensingPtr plan_with_sensing_;
+  bool allow_trajectory_execution_;
+  bool debug_;
+
+  //TODO
+  ros::Publisher display_path_;
 };
 }  // namespace planning_interface
 }  // namespace moveit
