@@ -181,7 +181,7 @@ moveit::planning_interface::MoveItCpp::MoveItCpp(const Options& opt, const std::
   // build context
   planning_scene_monitor_.reset(new planning_scene_monitor::PlanningSceneMonitor(ROBOT_DESCRIPTION, tf_buffer_));
   node_handle_.param("allow_trajectory_execution", allow_trajectory_execution_, true);
-  node_handle_.param("debug", debug_, false);
+  node_handle_.param("debug", enable_debug_, false);
   planning_pipeline_.reset(new planning_pipeline::PlanningPipeline(planning_scene_monitor_->getRobotModel()));
 
   if (allow_trajectory_execution_)
@@ -190,7 +190,7 @@ moveit::planning_interface::MoveItCpp::MoveItCpp(const Options& opt, const std::
         planning_scene_monitor_->getRobotModel(), planning_scene_monitor_->getStateMonitor()));
     plan_execution_.reset(new plan_execution::PlanExecution(planning_scene_monitor_, trajectory_execution_manager_));
     plan_with_sensing_.reset(new plan_execution::PlanWithSensing(trajectory_execution_manager_));
-    if (debug_)
+    if (enable_debug_)
       plan_with_sensing_->displayCostSources(true);
   }
 
@@ -198,7 +198,7 @@ moveit::planning_interface::MoveItCpp::MoveItCpp(const Options& opt, const std::
   planning_pipeline_->displayComputedMotionPlans(true);
   planning_pipeline_->checkSolutionPaths(true);
 
-  if (debug_)
+  if (enable_debug_)
     planning_pipeline_->publishReceivedRequests(true);
 }
 
@@ -270,7 +270,7 @@ moveit::planning_interface::MoveItCpp::MoveItCpp(MoveItCpp&& other)
     swap(this->plan_execution_, other.plan_execution_);
     swap(this->plan_with_sensing_, other.plan_with_sensing_);
     this->allow_trajectory_execution_ = other.allow_trajectory_execution_;
-    this->debug_ = other.debug_;
+    this->enable_debug_ = other.enable_debug_;
 
     remembered_joint_values_ = std::move(other.remembered_joint_values_);
   }
@@ -335,7 +335,7 @@ moveit::planning_interface::MoveItCpp& moveit::planning_interface::MoveItCpp::op
     swap(this->plan_execution_, other.plan_execution_);
     swap(this->plan_with_sensing_, other.plan_with_sensing_);
     this->allow_trajectory_execution_ = other.allow_trajectory_execution_;
-    this->debug_ = other.debug_;
+    this->enable_debug_ = other.enable_debug_;
 
     remembered_joint_values_ = std::move(other.remembered_joint_values_);
     other.clearContents();

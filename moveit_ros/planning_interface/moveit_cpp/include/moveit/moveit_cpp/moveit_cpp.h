@@ -97,7 +97,7 @@ namespace moveit
 /** \brief Simple interface to MoveIt! components */
 namespace planning_interface
 {
-class MoveItErrorCode : public moveit_msgs::MoveItErrorCodes
+class MoveItErrorCode : public moveit_msgs::MoveItErrorCodes // TODO combine into new header file with the same from move_group_interface
 {
 public:
   MoveItErrorCode()
@@ -136,7 +136,7 @@ MOVEIT_CLASS_FORWARD(MoveItCpp);
 class MoveItCpp
 {
 public:
-  /** \brief Default ROS parameter name from where to read the robot's URDF. Set to 'robot_description' */
+  /** \brief Default ROS parameter name from where to read the robot's URDF. Set to 'robot_description' */ //TODO move to .cpp
   static const std::string ROBOT_DESCRIPTION;
 
   /** \brief Specification of options to use when constructing the MoveItCpp class */
@@ -163,7 +163,7 @@ public:
   MOVEIT_STRUCT_FORWARD(Plan);
 
   /// The representation of a motion plan (as ROS messasges)
-  struct Plan
+  struct Plan // TODO combine into new header file with the same from move_group_interface
   {
     /// The full starting state used for planning
     moveit_msgs::RobotState start_state_;
@@ -982,50 +982,71 @@ public:
   /**@}*/
 
 protected:
-  /** return the full RobotState of the joint-space target, only for internal use */
+  /** \brief return the full RobotState of the joint-space target, only for internal use */
   const robot_state::RobotState& getTargetRobotState() const;
 
 private:
-  std::map<std::string, std::vector<double> > remembered_joint_values_;
 
-  bool status() const;
-
-  // New stuff
+  /** \brief Used to setup ros simple_action_clients and confirm that they are loaded by waiting for an action. */
   template <typename T>
   void waitForAction(const T& action, const std::string& name, const ros::WallTime& timeout, double allotted_time);
+
+  /** \brief Plan and execute that plan to the currently set goal. */
   MoveItErrorCode move(bool wait);
+
+  /** \brief Constructs a MoveGroupGoal object with given and internal information. */
   void constructGoal(moveit_msgs::MoveGroupGoal& goal);
+
+  /** \brief Constructs a PickupGoal object with given and internal information. */
   void constructGoal(moveit_msgs::PickupGoal& goal_out, const std::string& object);
+
+  /** \brief Constructs a PlaceGoal object with given and internal information. */
   void constructGoal(moveit_msgs::PlaceGoal& goal_out, const std::string& object);
+
+  /** \brief Executes the given plan. */
   MoveItErrorCode execute(const Plan& plan, bool wait);
+
+  /** \brief fills the Robot_state_pointer given with the current state of the robot. */
   bool getCurrentState(robot_state::RobotStatePtr& current_state, double wait_seconds);
+
+  /** \brief Sets the target to a the given target for the next plan() or move() command. */
   bool setJointValueTarget(const geometry_msgs::Pose& eef_pose, const std::string& end_effector_link,
                            const std::string& frame, bool approx);
+
+  /** \brief Gets the current startState, may be different from current state. */
   robot_state::RobotStatePtr getStartState();
+
+  /** \brief Checks if the given end effector has a curently loaded pose target. */
   bool hasPoseTarget(const std::string& end_effector_link) const;
+
+  /** \brief Deletes all the pointer contents of the class. */
   void clearContents();
+
+  /** \brief Converts the frame_id of the pose msg to the target frame, transforming the contents if necessary. */
+  bool performTransform(geometry_msgs::PoseStamped& pose_msg, const std::string& target_frame) const;
+
+  /** \brief Checks whether the given robot, planning_scene... is in a valid state. */
   static bool isStateValid(const planning_scene::PlanningScene* planning_scene,
                   const kinematic_constraints::KinematicConstraintSet* constraint_set, robot_state::RobotState* state,
                   const robot_state::JointModelGroup* group, const double* ik_solution);
-  bool performTransform(geometry_msgs::PoseStamped& pose_msg, const std::string& target_frame) const;
-  // void initializeConstraintsStorage(const std::string& host, unsigned int port);
 
-  // impl contents
+  /** \brief Helps set up boost threads. */
   void initializeConstraintsStorageThread(const std::string& host, unsigned int port);
 
-  //  Options
+  std::map<std::string, std::vector<double> > remembered_joint_values_;
   std::string group_name_;
   std::string robot_description_;
   ros::NodeHandle node_handle_;
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   robot_model::RobotModelConstPtr robot_model_;
   planning_scene_monitor::CurrentStateMonitorPtr current_state_monitor_;
+
+  // TODO eventually remove these when they are fully redundant
   std::unique_ptr<actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction> > move_action_client_;
   std::unique_ptr<actionlib::SimpleActionClient<moveit_msgs::ExecuteTrajectoryAction> > execute_action_client_;
   std::unique_ptr<actionlib::SimpleActionClient<moveit_msgs::PickupAction> > pick_action_client_;
   std::unique_ptr<actionlib::SimpleActionClient<moveit_msgs::PlaceAction> > place_action_client_;
 
-  // general planning params
   robot_state::RobotStatePtr considered_start_state_;
   moveit_msgs::WorkspaceParameters workspace_parameters_;
   double allowed_planning_time_;
@@ -1040,24 +1061,15 @@ private:
   bool can_replan_;
   bool display_computed_paths_;
   double replan_delay_;
-
-  // joint state goal
   robot_state::RobotStatePtr joint_state_target_;
   const robot_model::JointModelGroup* joint_model_group_;
-
-  // pose goal;
-  // for each link we have a set of possible goal locations;
   std::map<std::string, std::vector<geometry_msgs::PoseStamped> > pose_targets_;
-
-  // common properties for goals
   ActiveTargetType active_target_;
   std::unique_ptr<moveit_msgs::Constraints> path_constraints_;
   std::unique_ptr<moveit_msgs::TrajectoryConstraints> trajectory_constraints_;
   std::string end_effector_link_;
   std::string pose_reference_frame_;
   std::string support_surface_;
-
-  // ROS communication
   ros::Publisher trajectory_event_publisher_;
   ros::Publisher attached_object_publisher_;
   ros::ServiceClient query_service_;
@@ -1067,19 +1079,16 @@ private:
   std::unique_ptr<moveit_warehouse::ConstraintsStorage> constraints_storage_;
   std::unique_ptr<boost::thread> constraints_init_thread_;
   bool initializing_constraints_;
-
-  // context contents
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
   trajectory_execution_manager::TrajectoryExecutionManagerPtr trajectory_execution_manager_;
   planning_pipeline::PlanningPipelinePtr planning_pipeline_;
   plan_execution::PlanExecutionPtr plan_execution_;
   plan_execution::PlanWithSensingPtr plan_with_sensing_;
   bool allow_trajectory_execution_;
-  bool debug_;
-
-  //TODO
-  ros::Publisher display_path_;
+  bool enable_debug_;
+  ros::Publisher display_path_;  //TODO this currently does not publish to rviz even when published to.
 };
+
 }  // namespace planning_interface
 }  // namespace moveit
 
