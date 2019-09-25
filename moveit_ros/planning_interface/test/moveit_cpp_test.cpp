@@ -58,7 +58,7 @@ public:
   void SetUp() override
   {
     nh_ = ros::NodeHandle("/moveit_cpp_test");
-    moveit_cpp_ptr = std::make_shared<MoveitCpp>(nh_);
+    moveit_cpp_ptr = std::make_shared<MoveItCpp>(nh_);
     planning_component_ptr = std::make_shared<PlanningComponent>(PLANNING_GROUP, moveit_cpp_ptr);
     robot_model_ptr = moveit_cpp_ptr->getRobotModel();
     jmg_ptr = robot_model_ptr->getJointModelGroup(PLANNING_GROUP);
@@ -82,7 +82,7 @@ public:
 
 protected:
   ros::NodeHandle nh_;
-  MoveitCppPtr moveit_cpp_ptr;
+  MoveItCppPtr moveit_cpp_ptr;
   PlanningComponentPtr planning_component_ptr;
   robot_model::RobotModelConstPtr robot_model_ptr;
   const moveit::core::JointModelGroup* jmg_ptr;
